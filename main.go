@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,8 +15,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type TODO struct {
-	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+type Todo struct {
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Completed bool               `json:"completed"`
 	Body      string             `json:"body"`
 }
@@ -49,7 +50,12 @@ func main() {
 	collection = client.Database("golang_db").Collection("todos")
 
 	app := fiber.New()
-
+	// Enable CORS
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*", // You can restrict this to specific origins for better security
+		AllowMethods: "GET,POST,PUT,DELETE,PATCH",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
 	app.Get("/api/todos", getTodos)
 	app.Post("/api/todos", createTodo)
 	app.Patch("/api/todos/:id", updateTodo)
@@ -63,7 +69,7 @@ func main() {
 	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
 func getTodos(c *fiber.Ctx) error {
-	var todos []TODO
+	var todos []Todo
 	cursor, err := collection.Find(context.Background(), bson.M{})
 
 	if err != nil {
@@ -72,7 +78,7 @@ func getTodos(c *fiber.Ctx) error {
 	defer cursor.Close(context.Background())
 
 	for cursor.Next(context.Background()) {
-		var todo TODO
+		var todo Todo
 		if err := cursor.Decode(&todo); err != nil {
 			return err
 		}
@@ -82,7 +88,7 @@ func getTodos(c *fiber.Ctx) error {
 }
 
 func createTodo(c *fiber.Ctx) error {
-	todo := new(TODO)
+	todo := new(Todo)
 	// {id :0, completed:false , body:""}
 
 	if err := c.BodyParser(todo); err != nil {

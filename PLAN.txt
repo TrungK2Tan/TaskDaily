@@ -20,4 +20,10 @@ B4: go get github.com/joho/godotenv
     và tạo file .env để cấu hình connect với mongodb
 B5: go get go.mongodb.org/mongo-driver/mongo
 
-Q6XJHdtzHU6rq3M4
+?????????
+UI/UX
+B1: mkdir client 
+    để tạo thư mục client
+    truy cập vào thư mục client 
+B2: npm create vite@latest .
+    chọn react và chonj typescript

@@ -18,3 +18,6 @@ B3: go install github.com/cosmtrek/air@latest (khi no hiển thị lỗi thì c�
 
 B4: go get github.com/joho/godotenv 
     và tạo file .env để cấu hình connect với mongodb
+B5: go get go.mongodb.org/mongo-driver/mongo
+
+Q6XJHdtzHU6rq3M4

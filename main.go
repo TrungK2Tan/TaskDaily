@@ -108,22 +108,46 @@ func createTodo(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(todo)
 }
-
 func updateTodo(c *fiber.Ctx) error {
 	id := c.Params("id")
 	objectID, err := primitive.ObjectIDFromHex(id)
-
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid todo ID"})
 	}
-	filter := bson.M{"_id": objectID}
-	update := bson.M{"$set": bson.M{"completed": true}}
 
-	_, err = collection.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		return err
+	var updateData map[string]interface{}
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
-	return c.Status(200).JSON(fiber.Map{"success": true})
+
+	updateFields := bson.M{}
+
+	if body, ok := updateData["body"].(string); ok && body != "" {
+		updateFields["body"] = body
+	}
+	if completed, ok := updateData["completed"].(bool); ok {
+		updateFields["completed"] = completed
+	}
+
+	if len(updateFields) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "No valid fields to update"})
+	}
+
+	update := bson.M{"$set": updateFields}
+	filter := bson.M{"_id": objectID}
+
+	result, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update todo"})
+	}
+	if result.MatchedCount == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"updated": result.ModifiedCount,
+	})
 }
 
 func deleteTodo(c *fiber.Ctx) error {
